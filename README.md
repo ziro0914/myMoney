@@ -6,6 +6,7 @@
 ## 기능
 
 - **거래내역 가져오기**: 토스 앱에서 받은 엑셀(.xlsx)이나 CSV 파일을 올리면 열을 자동으로 찾습니다. 이미 가져온 내역은 다시 올려도 건너뜁니다.
+- **캡처 가져오기**: 토스 거래내역 화면 캡처를 올리면 AI(Claude)가 읽어서 내역으로 바꿉니다. 여러 장이나 긴 스크롤 캡처도 되고, 저장 전에 날짜·금액·분류를 확인하고 고칠 수 있습니다. 이미 있는 내역(파일로 가져온 것 포함)은 자동으로 빼 둡니다.
 - **자동 분류**: 스타벅스는 카페·간식, 이마트는 마트·생활처럼 분류합니다. 내역의 분류를 한 번 바꾸면 같은 거래처는 앞으로도 그 분류로 들어갑니다.
 - **월별 요약**: 지출과 수입, 지난달과 비교, 분류별 지출을 보여 줍니다.
 - **직접 입력**: 현금 지출처럼 통장에 안 찍힌 내역을 넣을 수 있습니다.
@@ -14,7 +15,7 @@
 
 ## 토스 연동에 대해
 
-토스는 개인이 거래내역을 자동으로 가져갈 수 있는 공개 API를 제공하지 않습니다. 오픈뱅킹과 마이데이터도 사업자만 쓸 수 있습니다. 그래서 이 앱은 **토스 앱에서 내보낸 파일을 올리는 방식**을 씁니다. 한 달에 한두 번 올리면 됩니다.
+토스는 개인이 거래내역을 자동으로 가져갈 수 있는 공개 API를 제공하지 않습니다. 오픈뱅킹과 마이데이터도 사업자만 쓸 수 있습니다. 그래서 이 앱은 **토스 앱에서 내보낸 파일**이나 **거래내역 화면 캡처**를 올리는 방식을 씁니다.
 
 ## 로컬에서 실행
 
@@ -38,22 +39,28 @@ Supabase 설정이 없으면 **이 기기 브라우저에만 저장하는 모드
    VITE_SUPABASE_ANON_KEY=eyJ...
    ```
 
+캡처 가져오기를 쓰려면 [console.anthropic.com](https://console.anthropic.com)에서 API 키를 만들어 `ANTHROPIC_API_KEY`로 넣습니다. 키는 서버 함수(`api/parse-screenshot.ts`)에서만 쓰여 브라우저에 노출되지 않고, 가족으로 로그인한 사람만 호출할 수 있습니다. 사용한 만큼 Anthropic에 요금이 나갑니다 (캡처 한 장에 대략 수십 원 수준으로 예상).
+
+로컬에서 로그인 없이 캡처 인식을 시험하려면 `.env`에 `SKIP_SCREENSHOT_AUTH=1`을 넣고 `npm run dev`로 실행하세요. 배포 환경에는 넣지 마세요.
+
 `members`에 등록된 이메일로 로그인한 사람만 내역을 읽고 쓸 수 있습니다. 데이터베이스의 행 수준 보안(RLS)으로 막습니다.
 
 ## 배포 (Vercel, 무료)
 
 1. [vercel.com](https://vercel.com)에서 이 GitHub 저장소를 Import 합니다. Vite 프로젝트로 자동 인식됩니다.
-2. Environment Variables에 `VITE_SUPABASE_URL`과 `VITE_SUPABASE_ANON_KEY`를 넣고 Deploy 합니다.
+2. Environment Variables에 `VITE_SUPABASE_URL`, `VITE_SUPABASE_ANON_KEY`, `ANTHROPIC_API_KEY`를 넣고 Deploy 합니다.
 3. 아이폰 Safari로 배포된 주소를 열고 **공유 → 홈 화면에 추가**를 누릅니다.
 
 ## 구조
 
 ```
 src/
+  screenshot.ts      캡처 줄이기·자르기, 인식 결과를 내역으로 바꾸기
   importer.ts        파일 읽기, 헤더 찾기, 금액·날짜 해석, 중복 키
   categories.ts      분류 목록과 키워드 자동 분류
   store/             저장소 (localRepo: 브라우저, supabaseRepo: 가족 공유)
   useLedger.ts       화면에서 쓰는 데이터와 동작
   views/             홈, 내역, 가져오기, 설정, 로그인 화면
+api/parse-screenshot.ts  캡처 인식 서버 함수 (Vercel)
 supabase/schema.sql  DB 테이블과 접근 권한
 ```

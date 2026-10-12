@@ -1,5 +1,5 @@
 import { categorize } from './categories'
-import type { NewTransaction, Rule } from './types'
+import type { NewTransaction, Rule, Transaction } from './types'
 
 export type Cell = string | number | boolean | Date | null | undefined
 export type Grid = Cell[][]
@@ -175,10 +175,38 @@ export function toTransactions(rows: ParsedRow[], rules: Rule[]): NewTransaction
     description: r.description,
     memo: r.memo,
     balance: r.balance,
-    category: categorize(r.description, r.amount, rules),
+    category: categorize(`${r.description} ${r.memo}`, r.amount, rules),
     source: 'import',
     dedupeKey: r.dedupeKey,
   }))
+}
+
+/**
+ * 이미 저장된 내역과 같은 거래로 보이는 것을 찾는다 (돌려주는 값은 newTxs의 인덱스).
+ * 파일과 캡처는 내용 칸이 다르게 적힐 수 있어서 날짜·금액이 같고, 시간·잔액은 둘 다 있을 때만 비교한다.
+ * 저장된 내역 하나는 새 내역 하나와만 짝지어서, 정말 같은 거래가 두 번 있으면 하나는 새 내역으로 남는다.
+ */
+export function findExisting(newTxs: NewTransaction[], existing: Transaction[]): Set<number> {
+  const byDay = new Map<string, Transaction[]>()
+  for (const t of existing) {
+    const k = `${t.date}|${t.amount}`
+    byDay.set(k, [...(byDay.get(k) ?? []), t])
+  }
+  const used = new Set<string>()
+  const dup = new Set<number>()
+  newTxs.forEach((n, i) => {
+    const match = (byDay.get(`${n.date}|${n.amount}`) ?? []).find(
+      (t) =>
+        !used.has(t.id) &&
+        (t.dedupeKey === n.dedupeKey ||
+          ((!t.time || !n.time || t.time === n.time) && (t.balance === null || n.balance === null || t.balance === n.balance))),
+    )
+    if (match) {
+      used.add(match.id)
+      dup.add(i)
+    }
+  })
+  return dup
 }
 
 /** 따옴표로 감싼 칸과 칸 안의 쉼표·줄바꿈을 처리하는 CSV 파서 */

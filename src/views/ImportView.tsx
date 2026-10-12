@@ -1,7 +1,8 @@
 import { useMemo, useState } from 'react'
 import { formatWon } from '../format'
-import { FIELD_LABELS, findHeader, parseRows, readGrids, toTransactions, type ColumnMap, type Field, type Grid } from '../importer'
+import { FIELD_LABELS, findExisting, findHeader, parseRows, readGrids, toTransactions, type ColumnMap, type Field, type Grid } from '../importer'
 import type { Ledger } from '../useLedger'
+import ScreenshotImport from './ScreenshotImport'
 
 interface Loaded {
   fileName: string
@@ -42,8 +43,8 @@ export default function ImportView({ ledger, done }: { ledger: Ledger; done: () 
     if (!loaded) return null
     const { rows, skipped } = parseRows(loaded.grid, loaded.headerRow, loaded.columns)
     const txs = toTransactions(rows, ledger.rules)
-    const existing = new Set(ledger.transactions.map((t) => t.dedupeKey))
-    const fresh = txs.filter((t) => !existing.has(t.dedupeKey))
+    const existing = findExisting(txs, ledger.transactions)
+    const fresh = txs.filter((_, i) => !existing.has(i))
     return { txs, fresh, skipped, duplicates: txs.length - fresh.length }
   }, [loaded, ledger.rules, ledger.transactions])
 
@@ -77,6 +78,7 @@ export default function ImportView({ ledger, done }: { ledger: Ledger; done: () 
         <input type="file" accept=".xlsx,.csv,.xls" onChange={(e) => onFile(e.target.files?.[0])} />
         <span>{loaded ? loaded.fileName : '엑셀 또는 CSV 파일 고르기'}</span>
       </label>
+      {!loaded && <ScreenshotImport ledger={ledger} done={done} />}
       {message && <p className="banner">{message}</p>}
 
       {loaded && preview && (

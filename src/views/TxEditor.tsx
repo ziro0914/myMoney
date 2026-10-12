@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { ALL_CATEGORIES, categorize } from '../categories'
 import { today } from '../format'
 import type { Transaction } from '../types'
-import type { Ledger } from '../useLedger'
+import { matchesKeyword, type Ledger } from '../useLedger'
 
 interface Props {
   ledger: Ledger
@@ -20,13 +20,15 @@ export default function TxEditor({ ledger, tx, close }: Props) {
   const [category, setCategory] = useState(tx?.category ?? '')
   const [memo, setMemo] = useState(tx?.memo ?? '')
   const [learn, setLearn] = useState(true)
+  const [keyword, setKeyword] = useState(tx?.description || tx?.memo || '')
   const [busy, setBusy] = useState(false)
 
   const editable = isNew || tx.source === 'manual'
   const signed = (kind === 'out' ? -1 : 1) * Number(amount.replace(/[^\d]/g, ''))
   const effectiveCategory = category || categorize(description, signed, ledger.rules)
   const categoryChanged = !!tx && category !== tx.category
-  const sameCount = tx ? ledger.transactions.filter((t) => t.description === tx.description).length : 0
+  const kw = keyword.trim()
+  const sameCount = tx && kw ? ledger.transactions.filter((t) => t.id !== tx.id && matchesKeyword(t, kw)).length : 0
 
   async function submit(e: React.FormEvent) {
     e.preventDefault()
@@ -38,7 +40,7 @@ export default function TxEditor({ ledger, tx, close }: Props) {
       ])
     } else {
       await ledger.updateTransaction(tx.id, editable ? { date, description: description.trim(), amount: signed, category, memo } : { category, memo })
-      if (categoryChanged && learn && tx.description) await ledger.learnCategory(tx.description, category)
+      if (categoryChanged && learn && kw) await ledger.learnCategory(kw, category)
     }
     close()
   }
@@ -91,11 +93,16 @@ export default function TxEditor({ ledger, tx, close }: Props) {
             ))}
           </select>
         </label>
-        {categoryChanged && tx.description && (
-          <label className="check">
-            <input type="checkbox" checked={learn} onChange={(e) => setLearn(e.target.checked)} />
-            '{tx.description}' 내역은 앞으로 모두 {category}(으)로 분류{sameCount > 1 ? ` (기존 ${sameCount - 1}건 포함)` : ''}
-          </label>
+        {categoryChanged && (
+          <div className="learn">
+            <label className="check">
+              <input type="checkbox" checked={learn} onChange={(e) => setLearn(e.target.checked)} />
+              <span>
+                내용이나 메모에 아래 단어가 들어간 내역은 앞으로 모두 {category}(으)로 분류{sameCount > 0 ? ` (기존 ${sameCount}건도 변경)` : ''}
+              </span>
+            </label>
+            {learn && <input value={keyword} onChange={(e) => setKeyword(e.target.value)} aria-label="분류 규칙 단어" placeholder="예: 젤라또" />}
+          </div>
         )}
         <label>
           메모

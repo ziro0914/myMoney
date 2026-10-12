@@ -116,7 +116,7 @@ label.check input { width: auto; margin-top: 0.15rem; }
 .tx-desc { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .tx-amount { font-weight: 600; white-space: nowrap; font-variant-numeric: tabular-nums; }
 .tx-amount.excluded { color: var(--text-2); font-weight: 400; text-decoration: line-through; }
-.pill { display: inline-block; font-size: 0.75rem; padding: 0.05rem 0.45rem; border-radius: 999px; background: var(--track); color: var(--text-2); }
+.pill { display: inline-block; white-space: nowrap; font-size: 0.75rem; padding: 0.05rem 0.45rem; border-radius: 999px; background: var(--track); color: var(--text-2); }
 .pill.warn { background: var(--warn-bg); color: var(--warn-ink); }
 
 .fab {
@@ -162,3 +162,15 @@ label.check input { width: auto; margin-top: 0.15rem; }
 .login { max-width: 400px; margin: 0 auto; padding: calc(env(safe-area-inset-top) + 4rem) 16px 2rem; }
 .login input { margin-bottom: 0.25rem; }
 .with-fab { padding-bottom: 4.5rem; }
+.learn { margin-bottom: 0.8rem; } .learn label.check { margin-bottom: 0.4rem; }
+
+.or { text-align: center; margin: 1rem 0 0.5rem; }
+.screenshot-import > .muted.small { margin-top: 0.4rem; }
+.review { list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 0.6rem; }
+.review li { background: var(--surface); border-radius: 14px; padding: 0.75rem; }
+.review li.off { opacity: 0.55; }
+.review input, .review select { padding: 0.45rem 0.6rem; }
+.review-head { display: grid; grid-template-columns: auto 1fr 5rem; gap: 0.5rem; align-items: center; margin-bottom: 0.5rem; }
+.review-head label.check { margin: 0; align-items: center; }
+.review-grid { display: grid; grid-template-columns: 1fr 8rem; gap: 0.5rem; }
+.review .income { color: var(--income); }

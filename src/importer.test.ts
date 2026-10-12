@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { categorize } from './categories'
-import { findHeader, parseCsv, parseDateTime, parseRows, toTransactions, withDedupeKeys } from './importer'
+import { findExisting, findHeader, parseCsv, parseDateTime, parseRows, toTransactions, withDedupeKeys } from './importer'
 
 describe('parseDateTime', () => {
   it('여러 날짜 형식을 읽는다', () => {
@@ -69,5 +69,23 @@ describe('categorize', () => {
   })
   it('환불은 원래 지출 분류로 들어간다', () => {
     expect(categorize('쿠팡 환불', 12000, [])).toBe('쇼핑')
+  })
+})
+
+describe('findExisting', () => {
+  const saved = {
+    id: 'a', date: '2026-10-12', time: '16:08', amount: -4270, description: '이새라', category: '미분류',
+    memo: '하남 젤라또', source: 'import' as const, dedupeKey: 'x', balance: 98292,
+  }
+  const fresh = { ...saved, description: '체크카드 이새라', memo: '', dedupeKey: 'y' }
+
+  it('내용이 달라도 날짜·시간·금액·잔액이 같으면 같은 거래로 본다', () => {
+    expect([...findExisting([fresh], [saved])]).toEqual([0])
+  })
+  it('잔액이 다르면 다른 거래다', () => {
+    expect(findExisting([{ ...fresh, balance: 1 }], [saved]).size).toBe(0)
+  })
+  it('저장된 거래 하나는 새 거래 하나와만 짝짓는다', () => {
+    expect([...findExisting([fresh, fresh], [saved])]).toEqual([0])
   })
 })
