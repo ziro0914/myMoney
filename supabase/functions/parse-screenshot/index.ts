@@ -55,7 +55,12 @@ async function krwRates(currencies: string[]): Promise<Record<string, number>> {
   return rates
 }
 
-const client = new Anthropic({ apiKey: Deno.env.get('ANTHROPIC_API_KEY') })
+// 워크스페이스에 묶이지 않은 키는 어느 워크스페이스로 쓸지 헤더로 알려 줘야 한다.
+const workspaceId = Deno.env.get('ANTHROPIC_WORKSPACE_ID')
+const client = new Anthropic({
+  apiKey: Deno.env.get('ANTHROPIC_API_KEY'),
+  defaultHeaders: workspaceId ? { 'anthropic-workspace-id': workspaceId } : undefined,
+})
 
 const reply = (body: unknown, status = 200) =>
   new Response(JSON.stringify(body), { status, headers: { ...cors, 'Content-Type': 'application/json' } })

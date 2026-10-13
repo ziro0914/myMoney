@@ -51,6 +51,8 @@ npx supabase secrets set ANTHROPIC_API_KEY=sk-ant-... --project-ref <프로젝�
 npx supabase functions deploy parse-screenshot --project-ref <프로젝트 ref>
 ```
 
+키가 워크스페이스에 묶이지 않은 종류라면 `ANTHROPIC_WORKSPACE_ID` 시크릿에 워크스페이스 ID(`wrkspc_…`)도 넣습니다.
+
 사용한 만큼 요금이 나갑니다 (캡처 한 장에 수십 원 수준으로 예상).
 
 ## 구조
