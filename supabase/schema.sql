@@ -35,3 +35,15 @@ drop policy if exists "family only" on rules;
 drop policy if exists "app access" on rules;
 create policy "app access" on rules for all
   to anon, authenticated using (true) with check (true);
+
+-- 월별 분류 예산. 정한 금액은 다음 달에도 이어지고, 0이면 그 달부터 예산 없음.
+create table if not exists budgets (
+  month text not null check (month ~ '^\d{4}-\d{2}$'),
+  category text not null,
+  amount bigint not null check (amount >= 0),
+  primary key (month, category)
+);
+alter table budgets enable row level security;
+drop policy if exists "app access" on budgets;
+create policy "app access" on budgets for all
+  to anon, authenticated using (true) with check (true);

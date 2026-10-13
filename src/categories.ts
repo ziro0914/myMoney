@@ -14,6 +14,8 @@ export const EXPENSE_CATEGORIES = [
   '여가',
   '보험',
   '경조사',
+  '투자',
+  '사업비용',
   '미분류',
 ] as const
 

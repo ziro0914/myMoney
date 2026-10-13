@@ -1,4 +1,4 @@
-import type { NewTransaction, Rule, Transaction } from '../types'
+import type { Budget, NewTransaction, Rule, Transaction } from '../types'
 
 export interface Repo {
   /** 'local'은 이 기기 브라우저에만, 'shared'는 Supabase에 저장해서 가족이 함께 본다. */
@@ -12,4 +12,7 @@ export interface Repo {
   /** 같은 키워드 규칙이 있으면 분류만 바꾼다. */
   saveRule(keyword: string, category: string): Promise<void>
   deleteRule(id: string): Promise<void>
+  listBudgets(): Promise<Budget[]>
+  /** 같은 달·분류 예산이 있으면 금액만 바꾼다. */
+  saveBudgets(budgets: Budget[]): Promise<void>
 }

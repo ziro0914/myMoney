@@ -1,8 +1,9 @@
-import type { NewTransaction, Rule, Transaction } from '../types'
+import type { Budget, NewTransaction, Rule, Transaction } from '../types'
 import type { Repo } from './repo'
 
 const TX_KEY = 'ledger.transactions'
 const RULE_KEY = 'ledger.rules'
+const BUDGET_KEY = 'ledger.budgets'
 
 function load<T>(key: string): T[] {
   try {
@@ -47,6 +48,14 @@ export function createLocalRepo(): Repo {
     },
     async deleteRule(id) {
       save(RULE_KEY, load<Rule>(RULE_KEY).filter((r) => r.id !== id))
+    },
+    async listBudgets() {
+      return load<Budget>(BUDGET_KEY)
+    },
+    async saveBudgets(budgets) {
+      const key = (b: Budget) => `${b.month}|${b.category}`
+      const replaced = new Set(budgets.map(key))
+      save(BUDGET_KEY, [...load<Budget>(BUDGET_KEY).filter((b) => !replaced.has(key(b))), ...budgets])
     },
   }
 }

@@ -1,5 +1,5 @@
 import type { SupabaseClient } from '@supabase/supabase-js'
-import type { NewTransaction, Rule, Transaction } from '../types'
+import type { Budget, NewTransaction, Rule, Transaction } from '../types'
 import type { Repo } from './repo'
 
 interface TxRow {
@@ -85,6 +85,16 @@ export function createSupabaseRepo(db: SupabaseClient): Repo {
     },
     async deleteRule(id) {
       const { error } = await db.from('rules').delete().eq('id', id)
+      if (error) throw error
+    },
+    async listBudgets() {
+      const { data, error } = await db.from('budgets').select('month, category, amount')
+      if (error) throw error
+      return (data as Budget[]).map((b) => ({ ...b, amount: Number(b.amount) }))
+    },
+    async saveBudgets(budgets) {
+      if (!budgets.length) return
+      const { error } = await db.from('budgets').upsert(budgets, { onConflict: 'month,category' })
       if (error) throw error
     },
   }

@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useState } from 'react'
 import { categorize } from './categories'
 import type { Repo } from './store/repo'
-import type { NewTransaction, Rule, Transaction } from './types'
+import type { Budget, NewTransaction, Rule, Transaction } from './types'
 
 export function matchesKeyword(t: Transaction, keyword: string): boolean {
   return `${t.description} ${t.memo}`.toUpperCase().includes(keyword.toUpperCase())
@@ -10,14 +10,16 @@ export function matchesKeyword(t: Transaction, keyword: string): boolean {
 export function useLedger(repo: Repo) {
   const [transactions, setTransactions] = useState<Transaction[]>([])
   const [rules, setRules] = useState<Rule[]>([])
+  const [budgets, setBudgets] = useState<Budget[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
 
   const reload = useCallback(async () => {
     try {
-      const [txs, rs] = await Promise.all([repo.listTransactions(), repo.listRules()])
+      const [txs, rs, bs] = await Promise.all([repo.listTransactions(), repo.listRules(), repo.listBudgets()])
       setTransactions(txs)
       setRules(rs)
+      setBudgets(bs)
       setError(null)
     } catch (e) {
       setError(e instanceof Error ? e.message : String(e))
@@ -48,6 +50,7 @@ export function useLedger(repo: Repo) {
   return {
     transactions,
     rules,
+    budgets,
     loading,
     error,
     clearError: () => setError(null),
@@ -64,6 +67,7 @@ export function useLedger(repo: Repo) {
       }),
     saveRule: (keyword: string, category: string) => run(() => repo.saveRule(keyword, category)),
     deleteRule: (id: string) => run(() => repo.deleteRule(id)),
+    saveBudgets: (bs: Budget[]) => run(() => repo.saveBudgets(bs)),
     /** 미분류·기타수입 내역에 지금 규칙을 다시 적용한다. 바뀐 건수를 돌려준다. */
     reapplyRules: () =>
       run(async () => {

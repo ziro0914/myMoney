@@ -17,6 +17,14 @@ export interface Transaction {
 
 export type NewTransaction = Omit<Transaction, 'id'>
 
+/** 월별 분류 예산. 금액 0은 그 달부터 예산 없음 */
+export interface Budget {
+  /** YYYY-MM */
+  month: string
+  category: string
+  amount: number
+}
+
 export interface Rule {
   id: string
   keyword: string
