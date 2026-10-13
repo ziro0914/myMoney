@@ -119,7 +119,7 @@ Deno.serve(async (req) => {
     if (e instanceof Anthropic.RateLimitError) return reply({ error: '요청이 많아요. 잠시 후 다시 시도해 주세요.' }, 429)
     if (e instanceof Anthropic.AuthenticationError || e instanceof Anthropic.PermissionDeniedError)
       return reply({ error: '서버의 API 키에 문제가 있어요. 키나 결제 상태를 확인해 주세요.' }, 502)
-    if (e instanceof Anthropic.APIError) return reply({ error: `이미지 인식 서비스 오류 (${e.status})` }, 502)
+    if (e instanceof Anthropic.APIError) return reply({ error: `이미지 인식 서비스 오류 (${e.status}): ${e.message}` }, 502)
     return reply({ error: `캡처를 읽는 중 오류가 났어요: ${(e as Error).message}` }, 500)
   }
 })
