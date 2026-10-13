@@ -1,6 +1,6 @@
-import { useEffect, useMemo, useState } from 'react'
-import type { Session } from '@supabase/supabase-js'
+import { useMemo, useState } from 'react'
 import { currentMonth } from './format'
+import { getUser, setUser } from './members'
 import { createLocalRepo } from './store/localRepo'
 import { createSupabaseRepo } from './store/supabaseRepo'
 import { supabase } from './store/supabase'
@@ -8,7 +8,7 @@ import { useLedger } from './useLedger'
 import type { Repo } from './store/repo'
 import Dashboard from './views/Dashboard'
 import ImportView from './views/ImportView'
-import Login from './views/Login'
+import PickUser from './views/PickUser'
 import SettingsView from './views/SettingsView'
 import TxList from './views/TxList'
 
@@ -22,25 +22,17 @@ const TABS: { id: Tab; label: string; icon: string }[] = [
 ]
 
 export default function App() {
-  const [session, setSession] = useState<Session | null>(null)
-  const [authReady, setAuthReady] = useState(!supabase)
+  const [user, setUserState] = useState(getUser)
+  const choose = (u: string | null) => {
+    setUser(u)
+    setUserState(u)
+  }
 
-  useEffect(() => {
-    if (!supabase) return
-    supabase.auth.getSession().then(({ data }) => {
-      setSession(data.session)
-      setAuthReady(true)
-    })
-    const { data } = supabase.auth.onAuthStateChange((_e, s) => setSession(s))
-    return () => data.subscription.unsubscribe()
-  }, [])
-
-  if (!authReady) return <div className="center muted">불러오는 중…</div>
-  if (supabase && !session) return <Login client={supabase} />
-  return <Ledger key={session?.user.id ?? 'local'} />
+  if (!user) return <PickUser pick={choose} />
+  return <Ledger user={user} switchUser={() => choose(null)} />
 }
 
-function Ledger() {
+function Ledger({ user, switchUser }: { user: string; switchUser: () => void }) {
   const repo: Repo = useMemo(() => (supabase ? createSupabaseRepo(supabase) : createLocalRepo()), [])
   const ledger = useLedger(repo)
   const [tab, setTab] = useState<Tab>('home')
@@ -74,7 +66,7 @@ function Ledger() {
         ) : tab === 'import' ? (
           <ImportView ledger={ledger} done={() => setTab('list')} />
         ) : (
-          <SettingsView ledger={ledger} mode={repo.mode} />
+          <SettingsView ledger={ledger} mode={repo.mode} user={user} switchUser={switchUser} />
         )}
       </main>
       <nav className="tabbar">

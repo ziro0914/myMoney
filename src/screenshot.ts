@@ -1,22 +1,6 @@
 import type { ParsedRow } from './importer'
 import type { ScreenshotRow } from './screenshotAi'
 
-const KEY_STORAGE = 'ledger.anthropicApiKey'
-
-/** 캡처 인식용 Anthropic API 키. 이 기기 브라우저에만 저장된다. */
-export function getApiKey(): string {
-  try {
-    return localStorage.getItem(KEY_STORAGE) ?? ''
-  } catch {
-    return ''
-  }
-}
-
-export function setApiKey(key: string) {
-  if (key) localStorage.setItem(KEY_STORAGE, key)
-  else localStorage.removeItem(KEY_STORAGE)
-}
-
 const pad = (n: number) => String(n).padStart(2, '0')
 
 /** 캡처에는 연도가 없어서, 오늘보다 미래가 되면 작년으로 본다. */
@@ -93,8 +77,6 @@ function dateLabel(date: string): string {
 
 /** 캡처 여러 장을 순서대로 읽는다. 앞 화면의 마지막 날짜를 다음 화면에 넘겨 날짜 헤더가 잘린 경우를 메운다. */
 export async function readScreenshots(files: File[], onProgress: (done: number, total: number) => void): Promise<ParsedRow[]> {
-  const apiKey = getApiKey()
-  if (!apiKey) throw new Error('설정 탭에서 캡처 인식용 API 키를 먼저 넣어 주세요.')
   const [{ parseScreenshot }, images] = await Promise.all([
     import('./screenshotAi'),
     Promise.all(files.map(prepareImage)).then((x) => x.flat()),
@@ -104,7 +86,7 @@ export async function readScreenshots(files: File[], onProgress: (done: number, 
   let lastDate: string | null = null
   for (const [i, image] of images.entries()) {
     onProgress(i, images.length)
-    const rows = toParsedRows(await parseScreenshot(apiKey, image, lastDate && dateLabel(lastDate)), today, lastDate)
+    const rows = toParsedRows(await parseScreenshot(image, lastDate && dateLabel(lastDate)), today, lastDate)
     all.push(...rows)
     if (rows.length) lastDate = rows[rows.length - 1].date
   }
