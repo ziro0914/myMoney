@@ -64,6 +64,7 @@ export async function parseScreenshot(apiKey: string, jpegBase64: string, previo
     if (e instanceof Anthropic.AuthenticationError) throw new Error('API 키가 올바르지 않아요. 설정에서 다시 넣어 주세요.')
     if (e instanceof Anthropic.PermissionDeniedError) throw new Error('이 API 키로는 사용할 수 없어요. 키 권한이나 결제 상태를 확인해 주세요.')
     if (e instanceof Anthropic.RateLimitError) throw new Error('요청이 많아요. 잠시 후 다시 시도해 주세요.')
+    if (e instanceof Anthropic.APIConnectionError) throw new Error('이미지 인식 서비스에 연결하지 못했어요. 인터넷 연결을 확인해 주세요.')
     if (e instanceof Anthropic.APIError) throw new Error(`이미지 인식 서비스 오류 (${e.status}): ${e.message}`)
     throw e
   }
