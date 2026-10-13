@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { ALL_CATEGORIES } from '../categories'
+import { getApiKey, setApiKey } from '../screenshot'
 import { supabase } from '../store/supabase'
 import type { Ledger } from '../useLedger'
 
@@ -23,6 +24,8 @@ export default function SettingsView({ ledger, mode }: { ledger: Ledger; mode: '
   const [keyword, setKeyword] = useState('')
   const [category, setCategory] = useState('식비')
   const [notice, setNotice] = useState<string | null>(null)
+  const [apiKey, setApiKeyInput] = useState(getApiKey())
+  const [keySaved, setKeySaved] = useState(!!getApiKey())
 
   return (
     <section>
@@ -72,6 +75,23 @@ export default function SettingsView({ ledger, mode }: { ledger: Ledger; mode: '
         미분류 내역에 규칙 다시 적용
       </button>
       {notice && <p className="muted small">{notice}</p>}
+
+      <h2>캡처 인식 (AI)</h2>
+      <p className="muted small">
+        캡처 가져오기에 쓰는 Anthropic API 키예요. 이 폰에만 저장되고 다른 곳으로 보내지지 않아요 (캡처를 읽을 때 Anthropic에만 쓰임).
+      </p>
+      <form
+        className="key-form"
+        onSubmit={(e) => {
+          e.preventDefault()
+          setApiKey(apiKey.trim())
+          setKeySaved(!!apiKey.trim())
+        }}
+      >
+        <input type="password" autoComplete="off" placeholder="sk-ant-..." value={apiKey} onChange={(e) => setApiKeyInput(e.target.value)} />
+        <button className="primary">저장</button>
+      </form>
+      <p className="muted small">{keySaved ? '✓ 저장된 키가 있어요.' : '아직 키가 없어요.'}</p>
 
       <h2>데이터</h2>
       <div className="stack">

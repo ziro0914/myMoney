@@ -65,7 +65,7 @@ export default function ScreenshotImport({ ledger, done }: { ledger: Ledger; don
         <input type="file" accept="image/*" multiple onChange={(e) => onFiles(e.target.files)} disabled={!!progress} />
         <span>{progress ?? '토스 거래내역 캡처 올리기 (여러 장 가능)'}</span>
       </label>
-      <p className="muted small">캡처를 AI가 읽어서 내역으로 바꿔요. 저장하기 전에 아래에서 확인하고 고칠 수 있어요.</p>
+      <p className="muted small">캡처를 AI가 읽어서 내역으로 바꿔요 (설정에서 API 키를 먼저 넣어야 해요). 저장하기 전에 아래에서 확인하고 고칠 수 있어요.</p>
       {error && <p className="banner">{error}</p>}
 
       {rows && rows.length > 0 && (

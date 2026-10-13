@@ -27,40 +27,35 @@ npm test        # 파일 가져오기와 분류 테스트
 
 Supabase 설정이 없으면 **이 기기 브라우저에만 저장하는 모드**로 동작합니다. 혼자 써 보기에는 이것만으로 충분합니다.
 
+## 주소
+
+https://ziro0914.github.io/storeBook/ — `main`에 올라오면 GitHub Actions(`.github/workflows/deploy.yml`)가 테스트 후 자동으로 배포합니다.
+
 ## 가족과 함께 쓰기 (Supabase, 무료)
 
-1. [supabase.com](https://supabase.com)에서 프로젝트를 만듭니다. 지역은 Northeast Asia (Seoul)를 고르세요.
-2. **SQL Editor**에서 `supabase/schema.sql` 내용을 붙여 넣고 실행합니다. 마지막 줄의 `insert into members`에 가족 이메일을 넣어 같이 실행하세요.
-3. **Authentication → Emails → Magic Link** 템플릿에 로그인 코드를 넣습니다. 예: `<p>로그인 코드: <b>{{ .Token }}</b></p>`
-   - 아이폰 홈 화면 앱은 메일의 링크를 누르면 Safari로 열려서 로그인이 앱에 전달되지 않습니다. 그래서 이 앱은 코드 입력 방식으로 로그인합니다.
-4. **Project Settings → API**에서 URL과 `anon` 키를 복사해 `.env` 파일을 만듭니다. `.env.example`을 참고하세요.
-   ```
-   VITE_SUPABASE_URL=https://xxxx.supabase.co
-   VITE_SUPABASE_ANON_KEY=eyJ...
-   ```
+설정 전에는 폰마다 따로 저장됩니다. 두 사람이 같은 가계부를 보려면:
 
-캡처 가져오기를 쓰려면 [console.anthropic.com](https://console.anthropic.com)에서 API 키를 만들어 `ANTHROPIC_API_KEY`로 넣습니다. 키는 서버 함수(`api/parse-screenshot.ts`)에서만 쓰여 브라우저에 노출되지 않고, 가족으로 로그인한 사람만 호출할 수 있습니다. 사용한 만큼 Anthropic에 요금이 나갑니다 (캡처 한 장에 대략 수십 원 수준으로 예상).
+1. [supabase.com](https://supabase.com)에서 프로젝트를 만듭니다 (Region: Northeast Asia (Seoul)).
+2. **SQL Editor**에 `supabase/schema.sql` 내용을 붙여 넣고, 마지막 줄 `insert into members`의 이메일을 바꾸고 `--`를 지운 뒤 실행합니다.
+3. **Authentication → Emails → Magic Link** 템플릿 본문에 `<p>로그인 코드: <b>{{ .Token }}</b></p>`를 넣습니다. 아이폰 홈 화면 앱은 메일 링크로 로그인할 수 없어 코드 입력 방식을 씁니다.
+4. **Project Settings → API**의 Project URL과 `anon public` 키를 GitHub 저장소 **Settings → Secrets and variables → Actions → Variables**에 `VITE_SUPABASE_URL`, `VITE_SUPABASE_ANON_KEY`로 넣고, **Actions** 탭에서 Deploy를 다시 실행합니다.
 
-로컬에서 로그인 없이 캡처 인식을 시험하려면 `.env`에 `SKIP_SCREENSHOT_AUTH=1`을 넣고 `npm run dev`로 실행하세요. 배포 환경에는 넣지 마세요.
+`anon` 키는 원래 공개되는 키이고, `members`에 등록된 이메일로 로그인한 사람만 내역을 읽고 쓸 수 있게 데이터베이스(RLS)에서 막습니다.
 
-`members`에 등록된 이메일로 로그인한 사람만 내역을 읽고 쓸 수 있습니다. 데이터베이스의 행 수준 보안(RLS)으로 막습니다.
+## 캡처 인식
 
-## 배포 (Vercel, 무료)
-
-1. [vercel.com](https://vercel.com)에서 이 GitHub 저장소를 Import 합니다. Vite 프로젝트로 자동 인식됩니다.
-2. Environment Variables에 `VITE_SUPABASE_URL`, `VITE_SUPABASE_ANON_KEY`, `ANTHROPIC_API_KEY`를 넣고 Deploy 합니다.
-3. 아이폰 Safari로 배포된 주소를 열고 **공유 → 홈 화면에 추가**를 누릅니다.
+[console.anthropic.com](https://console.anthropic.com)에서 API 키를 만들어 앱의 **설정 → 캡처 인식** 칸에 넣습니다. 키는 그 폰에만 저장되고 저장소에는 들어가지 않습니다. 사용한 만큼 요금이 나갑니다 (캡처 한 장에 수십 원 수준으로 예상).
 
 ## 구조
 
 ```
 src/
   screenshot.ts      캡처 줄이기·자르기, 인식 결과를 내역으로 바꾸기
+  screenshotAi.ts    Claude로 캡처 읽기 (브라우저에서 직접 호출)
   importer.ts        파일 읽기, 헤더 찾기, 금액·날짜 해석, 중복 키
   categories.ts      분류 목록과 키워드 자동 분류
   store/             저장소 (localRepo: 브라우저, supabaseRepo: 가족 공유)
   useLedger.ts       화면에서 쓰는 데이터와 동작
   views/             홈, 내역, 가져오기, 설정, 로그인 화면
-api/parse-screenshot.ts  캡처 인식 서버 함수 (Vercel)
 supabase/schema.sql  DB 테이블과 접근 권한
 ```

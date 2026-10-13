@@ -1,14 +1,20 @@
-import { supabase } from './store/supabase'
 import type { ParsedRow } from './importer'
+import type { ScreenshotRow } from './screenshotAi'
 
-interface ScreenshotRow {
-  month: number | null
-  day: number | null
-  time: string
-  title: string
-  subtitle: string
-  amount: number
-  balance: number | null
+const KEY_STORAGE = 'ledger.anthropicApiKey'
+
+/** 캡처 인식용 Anthropic API 키. 이 기기 브라우저에만 저장된다. */
+export function getApiKey(): string {
+  try {
+    return localStorage.getItem(KEY_STORAGE) ?? ''
+  } catch {
+    return ''
+  }
+}
+
+export function setApiKey(key: string) {
+  if (key) localStorage.setItem(KEY_STORAGE, key)
+  else localStorage.removeItem(KEY_STORAGE)
 }
 
 const pad = (n: number) => String(n).padStart(2, '0')
@@ -87,21 +93,18 @@ function dateLabel(date: string): string {
 
 /** 캡처 여러 장을 순서대로 읽는다. 앞 화면의 마지막 날짜를 다음 화면에 넘겨 날짜 헤더가 잘린 경우를 메운다. */
 export async function readScreenshots(files: File[], onProgress: (done: number, total: number) => void): Promise<ParsedRow[]> {
-  const images = (await Promise.all(files.map(prepareImage))).flat()
-  const token = supabase ? (await supabase.auth.getSession()).data.session?.access_token : undefined
+  const apiKey = getApiKey()
+  if (!apiKey) throw new Error('설정 탭에서 캡처 인식용 API 키를 먼저 넣어 주세요.')
+  const [{ parseScreenshot }, images] = await Promise.all([
+    import('./screenshotAi'),
+    Promise.all(files.map(prepareImage)).then((x) => x.flat()),
+  ])
   const today = new Date()
   const all: ParsedRow[] = []
   let lastDate: string | null = null
   for (const [i, image] of images.entries()) {
     onProgress(i, images.length)
-    const res = await fetch('/api/parse-screenshot', {
-      method: 'POST',
-      headers: { 'content-type': 'application/json', ...(token ? { authorization: `Bearer ${token}` } : {}) },
-      body: JSON.stringify({ image, mediaType: 'image/jpeg', previousDate: lastDate && dateLabel(lastDate) }),
-    })
-    const body = await res.json().catch(() => ({ error: `서버 오류 (${res.status})` }))
-    if (!res.ok) throw new Error(body.error ?? `서버 오류 (${res.status})`)
-    const rows = toParsedRows(body.rows as ScreenshotRow[], today, lastDate)
+    const rows = toParsedRows(await parseScreenshot(apiKey, image, lastDate && dateLabel(lastDate)), today, lastDate)
     all.push(...rows)
     if (rows.length) lastDate = rows[rows.length - 1].date
   }
