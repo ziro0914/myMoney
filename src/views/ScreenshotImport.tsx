@@ -63,9 +63,9 @@ export default function ScreenshotImport({ ledger, done }: { ledger: Ledger; don
       <p className="or muted small">또는</p>
       <label className="file-drop">
         <input type="file" accept="image/*" multiple onChange={(e) => onFiles(e.target.files)} disabled={!!progress} />
-        <span>{progress ?? '토스 거래내역 캡처 올리기 (여러 장 가능)'}</span>
+        <span>{progress ?? '토스 거래내역·카드 문자 캡처 올리기 (여러 장 가능)'}</span>
       </label>
-      <p className="muted small">캡처를 AI가 읽어서 내역으로 바꿔요. 저장하기 전에 아래에서 확인하고 고칠 수 있어요.</p>
+      <p className="muted small">캡처를 AI가 읽어서 내역으로 바꿔요. 해외 결제는 오늘 환율로 원화로 바꾸고 원래 금액은 메모에 남겨요. 저장하기 전에 아래에서 확인하고 고칠 수 있어요.</p>
       {error && <p className="banner">{error}</p>}
 
       {rows && rows.length > 0 && (

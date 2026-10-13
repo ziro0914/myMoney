@@ -1,7 +1,7 @@
 import { FunctionsHttpError } from '@supabase/supabase-js'
 import { supabase } from './store/supabase'
 
-// 토스 거래내역 캡처 한 장을 Claude로 읽는다.
+// 토스 거래내역이나 카드 승인 문자 캡처 한 장을 Claude로 읽는다.
 // API 키는 브라우저에 두지 않고, Supabase Edge Function(supabase/functions/parse-screenshot)이 대신 호출한다.
 
 export interface ScreenshotRow {
