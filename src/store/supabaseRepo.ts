@@ -1,6 +1,11 @@
 import type { SupabaseClient } from '@supabase/supabase-js'
 import type { Budget, NewTransaction, Rule, Transaction } from '../types'
 import type { Repo } from './repo'
+import { TABLE_PREFIX } from '../book'
+
+const TX = `${TABLE_PREFIX}transactions`
+const RULES = `${TABLE_PREFIX}rules`
+const BUDGETS = `${TABLE_PREFIX}budgets`
 
 interface TxRow {
   id: string
@@ -43,7 +48,7 @@ export function createSupabaseRepo(db: SupabaseClient): Repo {
       const all: Transaction[] = []
       for (let from = 0; ; from += PAGE) {
         const { data, error } = await db
-          .from('transactions')
+          .from(TX)
           .select('*')
           .order('date', { ascending: false })
           .order('id')
@@ -57,7 +62,7 @@ export function createSupabaseRepo(db: SupabaseClient): Repo {
       const added: Transaction[] = []
       for (let i = 0; i < txs.length; i += 500) {
         const { data, error } = await db
-          .from('transactions')
+          .from(TX)
           .upsert(txs.slice(i, i + 500).map(toRow), { onConflict: 'dedupe_key', ignoreDuplicates: true })
           .select('*')
         if (error) throw error
@@ -67,34 +72,34 @@ export function createSupabaseRepo(db: SupabaseClient): Repo {
     },
     async updateTransactions(ids, patch) {
       if (!ids.length) return
-      const { error } = await db.from('transactions').update(toRow(patch)).in('id', ids)
+      const { error } = await db.from(TX).update(toRow(patch)).in('id', ids)
       if (error) throw error
     },
     async deleteTransaction(id) {
-      const { error } = await db.from('transactions').delete().eq('id', id)
+      const { error } = await db.from(TX).delete().eq('id', id)
       if (error) throw error
     },
     async listRules() {
-      const { data, error } = await db.from('rules').select('id, keyword, category').order('keyword')
+      const { data, error } = await db.from(RULES).select('id, keyword, category').order('keyword')
       if (error) throw error
       return data as Rule[]
     },
     async saveRule(keyword, category) {
-      const { error } = await db.from('rules').upsert({ keyword, category }, { onConflict: 'keyword' })
+      const { error } = await db.from(RULES).upsert({ keyword, category }, { onConflict: 'keyword' })
       if (error) throw error
     },
     async deleteRule(id) {
-      const { error } = await db.from('rules').delete().eq('id', id)
+      const { error } = await db.from(RULES).delete().eq('id', id)
       if (error) throw error
     },
     async listBudgets() {
-      const { data, error } = await db.from('budgets').select('month, category, amount')
+      const { data, error } = await db.from(BUDGETS).select('month, category, amount')
       if (error) throw error
       return (data as Budget[]).map((b) => ({ ...b, amount: Number(b.amount) }))
     },
     async saveBudgets(budgets) {
       if (!budgets.length) return
-      const { error } = await db.from('budgets').upsert(budgets, { onConflict: 'month,category' })
+      const { error } = await db.from(BUDGETS).upsert(budgets, { onConflict: 'month,category' })
       if (error) throw error
     },
   }

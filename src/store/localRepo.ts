@@ -1,9 +1,10 @@
 import type { Budget, NewTransaction, Rule, Transaction } from '../types'
 import type { Repo } from './repo'
+import { STORAGE_PREFIX } from '../book'
 
-const TX_KEY = 'ledger.transactions'
-const RULE_KEY = 'ledger.rules'
-const BUDGET_KEY = 'ledger.budgets'
+const TX_KEY = `${STORAGE_PREFIX}transactions`
+const RULE_KEY = `${STORAGE_PREFIX}rules`
+const BUDGET_KEY = `${STORAGE_PREFIX}budgets`
 
 function load<T>(key: string): T[] {
   try {

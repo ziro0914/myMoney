@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { BOOK } from '../book'
 import { ALL_CATEGORIES } from '../categories'
 import type { Ledger } from '../useLedger'
 
@@ -27,7 +28,7 @@ export default function SettingsView({
   ledger: Ledger
   mode: 'local' | 'shared'
   user: string
-  switchUser: () => void
+  switchUser?: () => void
 }) {
   const [keyword, setKeyword] = useState('')
   const [category, setCategory] = useState('식비')
@@ -39,8 +40,10 @@ export default function SettingsView({
 
       <div className={`banner ${mode === 'local' ? '' : 'ok'}`}>
         {mode === 'local'
-          ? '지금은 이 기기 브라우저에만 저장돼요. 가족과 같이 보려면 README의 Supabase 설정을 해 주세요.'
-          : '가족 공유 모드 — 둘이 같은 가계부를 봐요.'}
+          ? '지금은 이 기기 브라우저에만 저장돼요. 여러 기기에서 보려면 README의 Supabase 설정을 해 주세요.'
+          : BOOK === 'personal'
+            ? '개인 가계부 — 가족 가계부와 따로 저장돼요.'
+            : '가족 공유 모드 — 둘이 같은 가계부를 봐요.'}
       </div>
 
       <h2>자동 분류 규칙</h2>
@@ -85,7 +88,7 @@ export default function SettingsView({
       <h2>데이터</h2>
       <div className="stack">
         <button onClick={() => exportCsv(ledger)}>전체 내역 CSV로 백업</button>
-        <button onClick={switchUser}>사용자 바꾸기 (지금: {user})</button>
+        {switchUser && <button onClick={switchUser}>사용자 바꾸기 (지금: {user})</button>}
       </div>
     </section>
   )

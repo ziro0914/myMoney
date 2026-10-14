@@ -67,7 +67,7 @@ export default function ImportView({ ledger, done }: { ledger: Ledger; done: () 
       <details className="help">
         <summary>토스에서 거래내역 파일 받는 법</summary>
         <ol>
-          <li>토스 앱에서 가족 통장(모임통장)을 엽니다.</li>
+          <li>토스 앱에서 가계부에 넣을 통장을 엽니다.</li>
           <li>거래내역 화면의 메뉴에서 <b>거래내역 내보내기 / 거래내역서 발급</b>을 찾아 엑셀(.xlsx) 또는 CSV로 받습니다.</li>
           <li>메일로 왔다면 아이폰 <b>파일</b> 앱에 저장한 뒤 아래 버튼으로 고르세요.</li>
         </ol>

@@ -5,10 +5,11 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "tsc -b && vite build",
+    "build": "tsc -b && VITE_BOOK=personal vite build && VITE_BOOK=family vite build --outDir dist/family",
     "lint": "oxlint",
     "preview": "vite preview",
-    "test": "vitest run"
+    "test": "vitest run",
+    "dev:personal": "VITE_BOOK=personal vite"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.117.3",

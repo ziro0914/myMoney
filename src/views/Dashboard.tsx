@@ -1,3 +1,4 @@
+import { BOOK_TITLE } from '../book'
 import { useMemo, useState } from 'react'
 import { budgetsFor } from '../budget'
 import { INCOME_CATEGORIES, isIncluded } from '../categories'
@@ -51,7 +52,7 @@ export default function Dashboard({ ledger, month, setMonth, openCategory, goImp
   if (ledger.transactions.length === 0) {
     return (
       <section className="empty">
-        <h1>우리집 가계부</h1>
+        <h1>{BOOK_TITLE}</h1>
         <p className="muted">토스 앱에서 받은 거래내역 파일을 가져오면 자동으로 분류해서 보여드려요.</p>
         <button className="primary" onClick={goImport}>거래내역 가져오기</button>
       </section>

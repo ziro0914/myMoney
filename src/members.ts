@@ -1,7 +1,9 @@
+import { STORAGE_PREFIX } from './book'
+
 // 가계부를 쓰는 사람. 로그인 없이 첫 화면에서 고르면 이 기기에 기억한다.
 export const MEMBERS = ['남편', '아내'] as const
 
-const KEY = 'ledger.user'
+const KEY = `${STORAGE_PREFIX}user`
 
 export function getUser(): string | null {
   try {
