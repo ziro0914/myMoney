@@ -1,11 +1,16 @@
 import type { SupabaseClient } from '@supabase/supabase-js'
 import type { Budget, NewTransaction, Rule, Transaction } from '../types'
 import type { Repo } from './repo'
-import { TABLE_PREFIX } from '../book'
+import { OWNER, TABLE_PREFIX } from '../book'
 
 const TX = `${TABLE_PREFIX}transactions`
 const RULES = `${TABLE_PREFIX}rules`
 const BUDGETS = `${TABLE_PREFIX}budgets`
+
+// 혼자 쓰는 가계부는 personal_* 테이블을 같이 쓰므로 owner로 내 것만 읽고 쓴다.
+const mine = <Q,>(q: Q): Q => (OWNER ? (q as unknown as { eq(column: string, value: string): Q }).eq('owner', OWNER) : q)
+const withOwner = <T extends object>(row: T): T => (OWNER ? { ...row, owner: OWNER } : row)
+const ownerKey = (cols: string) => (OWNER ? `owner,${cols}` : cols)
 
 interface TxRow {
   id: string
@@ -47,9 +52,7 @@ export function createSupabaseRepo(db: SupabaseClient): Repo {
       // Supabase는 한 번에 최대 1000행까지 돌려주므로 나눠서 받는다.
       const all: Transaction[] = []
       for (let from = 0; ; from += PAGE) {
-        const { data, error } = await db
-          .from(TX)
-          .select('*')
+        const { data, error } = await mine(db.from(TX).select('*'))
           .order('date', { ascending: false })
           .order('id')
           .range(from, from + PAGE - 1)
@@ -63,7 +66,7 @@ export function createSupabaseRepo(db: SupabaseClient): Repo {
       for (let i = 0; i < txs.length; i += 500) {
         const { data, error } = await db
           .from(TX)
-          .upsert(txs.slice(i, i + 500).map(toRow), { onConflict: 'dedupe_key', ignoreDuplicates: true })
+          .upsert(txs.slice(i, i + 500).map((t) => withOwner(toRow(t))), { onConflict: ownerKey('dedupe_key'), ignoreDuplicates: true })
           .select('*')
         if (error) throw error
         added.push(...(data as TxRow[]).map(fromRow))
@@ -72,34 +75,34 @@ export function createSupabaseRepo(db: SupabaseClient): Repo {
     },
     async updateTransactions(ids, patch) {
       if (!ids.length) return
-      const { error } = await db.from(TX).update(toRow(patch)).in('id', ids)
+      const { error } = await mine(db.from(TX).update(toRow(patch))).in('id', ids)
       if (error) throw error
     },
     async deleteTransaction(id) {
-      const { error } = await db.from(TX).delete().eq('id', id)
+      const { error } = await mine(db.from(TX).delete()).eq('id', id)
       if (error) throw error
     },
     async listRules() {
-      const { data, error } = await db.from(RULES).select('id, keyword, category').order('keyword')
+      const { data, error } = await mine(db.from(RULES).select('id, keyword, category')).order('keyword')
       if (error) throw error
       return data as Rule[]
     },
     async saveRule(keyword, category) {
-      const { error } = await db.from(RULES).upsert({ keyword, category }, { onConflict: 'keyword' })
+      const { error } = await db.from(RULES).upsert(withOwner({ keyword, category }), { onConflict: ownerKey('keyword') })
       if (error) throw error
     },
     async deleteRule(id) {
-      const { error } = await db.from(RULES).delete().eq('id', id)
+      const { error } = await mine(db.from(RULES).delete()).eq('id', id)
       if (error) throw error
     },
     async listBudgets() {
-      const { data, error } = await db.from(BUDGETS).select('month, category, amount')
+      const { data, error } = await mine(db.from(BUDGETS).select('month, category, amount'))
       if (error) throw error
       return (data as Budget[]).map((b) => ({ ...b, amount: Number(b.amount) }))
     },
     async saveBudgets(budgets) {
       if (!budgets.length) return
-      const { error } = await db.from(BUDGETS).upsert(budgets, { onConflict: 'month,category' })
+      const { error } = await db.from(BUDGETS).upsert(budgets.map(withOwner), { onConflict: ownerKey('month,category') })
       if (error) throw error
     },
   }

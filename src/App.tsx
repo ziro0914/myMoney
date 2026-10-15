@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react'
-import { BOOK } from './book'
+import { SOLO_USER } from './book'
 import { currentMonth } from './format'
 import { getUser, setUser } from './members'
 import { createLocalRepo } from './store/localRepo'
@@ -23,8 +23,8 @@ const TABS: { id: Tab; label: string; icon: string }[] = [
 ]
 
 export default function App() {
-  // 개인 가계부는 혼자 쓰니 사용자를 고르지 않는다.
-  if (BOOK === 'personal') return <Ledger user="나" />
+  // 혼자 쓰는 가계부(내 것, 새라 것)는 사용자를 고르지 않는다.
+  if (SOLO_USER) return <Ledger user={SOLO_USER} />
   return <FamilyApp />
 }
 

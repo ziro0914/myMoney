@@ -30,21 +30,22 @@ Supabase 설정이 없으면 **이 기기 브라우저에만 저장하는 모드
 
 ## 주소
 
-같은 코드로 가계부 두 개를 만듭니다. 데이터는 완전히 따로 저장됩니다.
+같은 코드로 가계부 세 개를 만듭니다. 데이터는 완전히 따로 저장됩니다.
 
 | 가계부 | 주소 | Supabase 테이블 |
 |---|---|---|
 | 내 가계부 (혼자) | https://ziro0914.github.io/myMoney/ | `personal_transactions`, `personal_rules`, `personal_budgets` |
 | 우리집 가계부 (부부) | https://ziro0914.github.io/myMoney/family/ | `transactions`, `rules`, `budgets` |
+| 새라 가계부 (혼자) | https://ziro0914.github.io/myMoney/saera/ | `personal_*` 테이블에서 `owner = 'saera'` (내 가계부는 `owner = 'me'`) |
 
-`main`에 올라오면 GitHub Actions(`.github/workflows/deploy.yml`)가 테스트 후 둘 다 배포합니다. 빌드할 때 `VITE_BOOK=personal`이면 개인용, 아니면 가족용이 됩니다 (`src/book.ts`). 로컬에서는 `npm run dev`(가족), `npm run dev:personal`(개인).
+`main`에 올라오면 GitHub Actions(`.github/workflows/deploy.yml`)가 테스트 후 모두 배포합니다. 빌드할 때 `VITE_BOOK=personal`이면 개인용, `saera`면 새라용, 아니면 가족용이 됩니다 (`src/book.ts`). 로컬에서는 `npm run dev`(가족), `npm run dev:personal`(개인), `npm run dev:saera`(새라).
 
 ## 가족과 함께 쓰기 (Supabase, 무료)
 
 설정 전에는 폰마다 따로 저장됩니다. 두 사람이 같은 가계부를 보려면:
 
 1. [supabase.com](https://supabase.com)에서 프로젝트를 만듭니다 (Region: Northeast Asia (Seoul)).
-2. **SQL Editor**에서 `supabase/schema.sql`(가족)과 `supabase/personal.sql`(개인)을 실행합니다.
+2. **SQL Editor**에서 `supabase/schema.sql`(가족), `supabase/personal.sql`(개인), `supabase/personal-owner.sql`(개인·새라 구분)을 차례로 실행합니다.
 3. **Project Settings → API**의 Project URL과 `anon public` 키를 GitHub 저장소 **Settings → Secrets and variables → Actions → Variables**에 `VITE_SUPABASE_URL`, `VITE_SUPABASE_ANON_KEY`로 넣고, **Actions** 탭에서 Deploy를 다시 실행합니다.
 
 로그인은 없습니다. 첫 화면에서 누가 쓰는지(`src/members.ts`의 이름)만 고르면 바로 들어갑니다.
@@ -71,7 +72,7 @@ src/
   screenshotAi.ts    캡처 인식 서버 함수 호출
   importer.ts        파일 읽기, 헤더 찾기, 금액·날짜 해석, 중복 키
   categories.ts      분류 목록과 키워드 자동 분류
-  book.ts            어떤 가계부(개인/가족)로 빌드할지
+  book.ts            어떤 가계부(개인/가족/새라)로 빌드할지
   budget.ts          월별 예산 계산 (이전 달 예산 이어 쓰기)
   store/             저장소 (localRepo: 브라우저, supabaseRepo: 가족 공유)
   useLedger.ts       화면에서 쓰는 데이터와 동작

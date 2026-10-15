@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { BOOK } from '../book'
+import { BOOK, BOOK_TITLE } from '../book'
 import { ALL_CATEGORIES } from '../categories'
 import type { Ledger } from '../useLedger'
 
@@ -41,8 +41,8 @@ export default function SettingsView({
       <div className={`banner ${mode === 'local' ? '' : 'ok'}`}>
         {mode === 'local'
           ? '지금은 이 기기 브라우저에만 저장돼요. 여러 기기에서 보려면 README의 Supabase 설정을 해 주세요.'
-          : BOOK === 'personal'
-            ? '개인 가계부 — 가족 가계부와 따로 저장돼요.'
+          : BOOK !== 'family'
+            ? `${BOOK_TITLE} — 다른 가계부와 따로 저장돼요.`
             : '가족 공유 모드 — 둘이 같은 가계부를 봐요.'}
       </div>
 

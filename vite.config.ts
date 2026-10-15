@@ -2,10 +2,10 @@ import { readFileSync } from 'node:fs'
 import react from '@vitejs/plugin-react'
 import { defineConfig, type Plugin } from 'vite'
 
-// 빌드할 때 VITE_BOOK=personal 이면 개인 가계부, 아니면 가족 가계부를 만든다 (src/book.ts).
-const book = process.env.VITE_BOOK === 'personal' ? 'personal' : 'family'
-const title = book === 'personal' ? '내 가계부' : '우리집 가계부'
-const shortName = book === 'personal' ? '내 가계부' : '가족 가계부'
+// 빌드할 때 VITE_BOOK=personal 이면 개인 가계부, saera 면 새라 가계부, 아니면 가족 가계부를 만든다 (src/book.ts).
+const book = process.env.VITE_BOOK === 'personal' ? 'personal' : process.env.VITE_BOOK === 'saera' ? 'saera' : 'family'
+const title = book === 'personal' ? '내 가계부' : book === 'saera' ? '새라 가계부' : '우리집 가계부'
+const shortName = book === 'personal' ? '내 가계부' : book === 'saera' ? '새라 가계부' : '가족 가계부'
 const ICONS = ['favicon.svg', 'apple-touch-icon.png', 'icon-192.png', 'icon-512.png']
 
 /** 가계부마다 다른 제목·아이콘·매니페스트를 넣는다. 홈 화면에서 둘을 구분할 수 있게. */
