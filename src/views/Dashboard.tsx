@@ -1,9 +1,8 @@
 import { BOOK_TITLE } from '../book'
 import { useMemo, useState } from 'react'
 import { budgetsFor } from '../budget'
-import { INCOME_CATEGORIES, isIncluded } from '../categories'
-import { formatWon, monthOf, shiftMonth } from '../format'
-import type { Transaction } from '../types'
+import { formatWon, shiftMonth } from '../format'
+import { summarize } from '../summary'
 import type { Ledger } from '../useLedger'
 import BudgetEditor from './BudgetEditor'
 import MonthPicker from './MonthPicker'
@@ -14,25 +13,6 @@ interface Props {
   setMonth: (m: string) => void
   openCategory: (c: string) => void
   goImport: () => void
-}
-
-const isIncomeCategory = (c: string) => (INCOME_CATEGORIES as readonly string[]).includes(c)
-
-function summarize(txs: Transaction[], month: string) {
-  let income = 0
-  let expense = 0
-  const byCategory = new Map<string, number>()
-  for (const t of txs) {
-    if (monthOf(t.date) !== month || !isIncluded(t.category)) continue
-    if (isIncomeCategory(t.category)) income += t.amount
-    else {
-      // 지출 분류에 들어온 입금(환불)은 그 분류 지출에서 빠진다.
-      expense -= t.amount
-      byCategory.set(t.category, (byCategory.get(t.category) ?? 0) - t.amount)
-    }
-  }
-  const categories = [...byCategory].filter(([, v]) => v > 0).sort((a, b) => b[1] - a[1])
-  return { income, expense, categories }
 }
 
 export default function Dashboard({ ledger, month, setMonth, openCategory, goImport }: Props) {
@@ -80,6 +60,9 @@ export default function Dashboard({ ledger, month, setMonth, openCategory, goImp
         <div className="tile">
           <span className="muted">수입</span>
           <strong className="income">{formatWon(now.income)}</strong>
+          {now.inflows.length > 0 && (
+            <small className="muted">지출 분류로 들어온 돈 {formatWon(now.inflows.reduce((a, [, v]) => a + v, 0))} 포함</small>
+          )}
           <small className="muted">남은 돈 {formatWon(now.income - now.expense, true)}</small>
         </div>
       </div>
@@ -123,6 +106,26 @@ export default function Dashboard({ ledger, month, setMonth, openCategory, goImp
             )
           })}
         </ul>
+      )}
+      {now.inflows.length > 0 && (
+        <>
+          <div className="section-head">
+            <h2>지출 분류로 들어온 돈</h2>
+          </div>
+          <p className="muted small">나간 돈보다 들어온 돈이 많은 분류예요. 수입에 넣어 계산했어요. 입금을 잘못 분류했다면 눌러서 고쳐 주세요.</p>
+          <ul className="bars">
+            {now.inflows.map(([category, value]) => (
+              <li key={category}>
+                <button onClick={() => openCategory(category)}>
+                  <span className="bar-label">
+                    <span>{category}</span>
+                    <span className="income">+{formatWon(value)}</span>
+                  </span>
+                </button>
+              </li>
+            ))}
+          </ul>
+        </>
       )}
       {budgetEditor}
     </section>
