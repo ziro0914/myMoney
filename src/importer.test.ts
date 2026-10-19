@@ -89,3 +89,12 @@ describe('findExisting', () => {
     expect([...findExisting([fresh, fresh], [saved])]).toEqual([0])
   })
 })
+
+describe('가족 가계부 용돈 분류', () => {
+  it('용돈이 지출 분류에 있고 자동 분류된다', async () => {
+    const { EXPENSE_CATEGORIES } = await import('./categories')
+    expect(EXPENSE_CATEGORIES).toContain('용돈')
+    expect(categorize('이새라 용돈', -300000, [])).toBe('용돈')
+    expect(categorize('홍길동 용돈', 300000, [])).toBe('기타수입')
+  })
+})

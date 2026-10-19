@@ -1,6 +1,10 @@
+import { BOOK } from './book'
 import type { Rule } from './types'
 
-export const EXPENSE_CATEGORIES = [
+/** 가족 가계부에만 있는 지출 분류 */
+const FAMILY_ONLY_CATEGORIES = BOOK === 'family' ? ['용돈'] : []
+
+export const EXPENSE_CATEGORIES: readonly string[] = [
   '식비',
   '카페·간식',
   '마트·생활',
@@ -14,10 +18,11 @@ export const EXPENSE_CATEGORIES = [
   '여가',
   '보험',
   '경조사',
+  ...FAMILY_ONLY_CATEGORIES,
   '투자',
   '사업비용',
   '미분류',
-] as const
+]
 
 export const INCOME_CATEGORIES = ['급여', '기타수입'] as const
 
@@ -40,6 +45,7 @@ const DEFAULT_KEYWORDS: Record<string, string[]> = {
   '여가': ['CGV', '메가박스', '롯데시네마', '야놀자', '여기어때', '에어비앤비'],
   '보험': ['보험', '화재', '생명'],
   '급여': ['급여', '월급', '상여'],
+  ...(BOOK === 'family' ? { '용돈': ['용돈'] } : {}),
 }
 
 export const DEFAULT_RULES: Rule[] = Object.entries(DEFAULT_KEYWORDS).flatMap(([category, keywords]) =>
@@ -61,6 +67,8 @@ export function categorize(description: string, amount: number, userRules: Rule[
         // 기본 수입 규칙은 입금에만 적용 (예: '급여'라는 단어가 들어간 출금은 무시).
         // 지출 분류는 입금(환불)에도 적용해서 그 분류 지출에서 상계되게 한다.
         if (rules === DEFAULT_RULES && isIncomeCategory && amount < 0) continue
+        // 기본 '용돈' 규칙은 준 용돈(출금)에만. 받은 용돈은 수입으로 둔다.
+        if (rules === DEFAULT_RULES && rule.category === '용돈' && amount > 0) continue
         return rule.category
       }
     }
