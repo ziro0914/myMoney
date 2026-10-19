@@ -11,6 +11,7 @@ export const EXPENSE_CATEGORIES: readonly string[] = [
   '쇼핑',
   '교통',
   '주거·공과금',
+  '대출이자',
   '통신',
   '구독',
   '의료',
@@ -45,10 +46,12 @@ const DEFAULT_KEYWORDS: Record<string, string[]> = {
   '여가': ['CGV', '메가박스', '롯데시네마', '야놀자', '여기어때', '에어비앤비'],
   '보험': ['보험', '화재', '생명'],
   '급여': ['급여', '월급', '상여'],
+  '대출이자': ['대출이자', '대출 이자', '이자'],
   ...(BOOK === 'family' ? { '용돈': ['용돈'], '부모님': ['부모님', '어머니', '아버지', '어머님', '아버님', '장모님', '장인어른', '시어머니', '시아버지'] } : {}),
 }
 
-const OUTGOING_ONLY = new Set(['용돈', '부모님'])
+// 받은 돈이면 수입으로 둘 분류 (예: 예금 이자 입금은 대출이자가 아님)
+const OUTGOING_ONLY = new Set(['용돈', '부모님', '대출이자'])
 
 export const DEFAULT_RULES: Rule[] = Object.entries(DEFAULT_KEYWORDS).flatMap(([category, keywords]) =>
   keywords.map((keyword) => ({ id: `default:${keyword}`, keyword, category })),

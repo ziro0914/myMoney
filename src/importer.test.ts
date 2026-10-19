@@ -101,3 +101,12 @@ describe('가족 가계부 용돈 분류', () => {
     expect(categorize('아버지', 100000, [])).toBe('기타수입')
   })
 })
+
+describe('대출이자 분류', () => {
+  it('이자 출금은 대출이자, 이자 입금은 수입', async () => {
+    const { EXPENSE_CATEGORIES } = await import('./categories')
+    expect(EXPENSE_CATEGORIES).toContain('대출이자')
+    expect(categorize('KB국민 대출이자', -450000, [])).toBe('대출이자')
+    expect(categorize('예금이자', 1200, [])).toBe('기타수입')
+  })
+})
