@@ -96,5 +96,8 @@ describe('가족 가계부 용돈 분류', () => {
     expect(EXPENSE_CATEGORIES).toContain('용돈')
     expect(categorize('이새라 용돈', -300000, [])).toBe('용돈')
     expect(categorize('홍길동 용돈', 300000, [])).toBe('기타수입')
+    expect(EXPENSE_CATEGORIES).toContain('부모님')
+    expect(categorize('어머니 생신', -200000, [])).toBe('부모님')
+    expect(categorize('아버지', 100000, [])).toBe('기타수입')
   })
 })
