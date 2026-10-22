@@ -4,6 +4,9 @@ import type { Rule } from './types'
 /** 가족 가계부에만 있는 지출 분류 */
 const FAMILY_ONLY_CATEGORIES = BOOK === 'family' ? ['용돈', '부모님'] : []
 
+/** 내 가계부는 '구독' 대신 '동창회비'를 쓴다 */
+const SUBSCRIPTION_SLOT = BOOK === 'personal' ? '동창회비' : '구독'
+
 export const EXPENSE_CATEGORIES: readonly string[] = [
   '식비',
   '카페·간식',
@@ -13,7 +16,7 @@ export const EXPENSE_CATEGORIES: readonly string[] = [
   '주거·공과금',
   '대출이자',
   '통신',
-  '구독',
+  SUBSCRIPTION_SLOT,
   '의료',
   '교육',
   '여가',
@@ -40,7 +43,9 @@ const DEFAULT_KEYWORDS: Record<string, string[]> = {
   '교통': ['카카오T', '택시', '티머니', '코레일', 'SRT', '주유', 'GS칼텍스', 'SK에너지', 'S-OIL', '현대오일뱅크', '하이패스', '주차'],
   '주거·공과금': ['관리비', '전기요금', '한국전력', '도시가스', '가스요금', '수도요금', '월세'],
   '통신': ['SKT', 'SK텔레콤', 'KT', 'LGU+', 'LG유플러스', '알뜰폰'],
-  '구독': ['넷플릭스', 'NETFLIX', '유튜브', 'YOUTUBE', '디즈니', '멜론', '스포티파이', '쿠팡와우', '애플', 'APPLE.COM'],
+  ...(BOOK === 'personal'
+    ? { '동창회비': ['동창회', '동문회'] }
+    : { '구독': ['넷플릭스', 'NETFLIX', '유튜브', 'YOUTUBE', '디즈니', '멜론', '스포티파이', '쿠팡와우', '애플', 'APPLE.COM'] }),
   '의료': ['병원', '의원', '약국', '치과', '한의원'],
   '교육': ['어린이집', '유치원', '학원', '교육', '학습지', '교보문고', '예스24', '알라딘'],
   '여가': ['CGV', '메가박스', '롯데시네마', '야놀자', '여기어때', '에어비앤비'],
