@@ -26,3 +26,21 @@ describe('budgetsFor', () => {
     expect(budgetsFor(budgets, '2026-07').size).toBe(0)
   })
 })
+
+describe('소진율', () => {
+  it('예산 대비 쓴 비율', async () => {
+    const { usedPercent } = await import('./budget')
+    expect(usedPercent(300_000, 600_000)).toBe(50)
+    expect(usedPercent(660_000, 600_000)).toBe(110)
+    expect(usedPercent(1, 0)).toBe(0)
+  })
+  it('기간이 얼마나 지났는지', async () => {
+    const { elapsedPercent } = await import('./budget')
+    // 9/21~10/20은 30일
+    expect(elapsedPercent('2026-09-21', '2026-10-20', '2026-09-21')).toBe(3)
+    expect(elapsedPercent('2026-09-21', '2026-10-20', '2026-10-05')).toBe(50)
+    expect(elapsedPercent('2026-09-21', '2026-10-20', '2026-10-20')).toBe(100)
+    expect(elapsedPercent('2026-09-21', '2026-10-20', '2026-11-01')).toBe(100)
+    expect(elapsedPercent('2026-09-21', '2026-10-20', '2026-09-01')).toBe(0)
+  })
+})

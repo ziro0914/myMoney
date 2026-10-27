@@ -16,3 +16,20 @@ export function budgetsFor(budgets: Budget[], month: string): Map<string, number
   for (const [category, b] of latest) if (b.amount > 0) result.set(category, b.amount)
   return result
 }
+
+/** 예산 대비 쓴 비율(%) — 반올림, 예산이 0이면 0 */
+export function usedPercent(spent: number, budget: number): number {
+  return budget > 0 ? Math.round((spent / budget) * 100) : 0
+}
+
+/**
+ * 오늘이 그 기간의 몇 %를 지났는지. 지난 기간은 100, 아직 오지 않은 기간은 0.
+ * (start, end는 YYYY-MM-DD, 양 끝 포함)
+ */
+export function elapsedPercent(start: string, end: string, today: string): number {
+  if (today < start) return 0
+  if (today > end) return 100
+  const day = (s: string) => Date.UTC(+s.slice(0, 4), +s.slice(5, 7) - 1, +s.slice(8, 10)) / 86_400_000
+  const total = day(end) - day(start) + 1
+  return Math.round(((day(today) - day(start) + 1) / total) * 100)
+}

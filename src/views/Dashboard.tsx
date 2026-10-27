@@ -1,7 +1,7 @@
 import { BOOK_TITLE } from '../book'
 import { useMemo, useState } from 'react'
-import { budgetsFor } from '../budget'
-import { formatWon, shiftMonth } from '../format'
+import { budgetsFor, elapsedPercent, usedPercent } from '../budget'
+import { formatWon, monthRange, shiftMonth, today } from '../format'
 import { summarize } from '../summary'
 import type { Ledger } from '../useLedger'
 import BudgetEditor from './BudgetEditor'
@@ -27,6 +27,10 @@ export default function Dashboard({ ledger, month, setMonth, openCategory, goImp
   const rows = [...now.categories, ...[...budgets.keys()].filter((c) => !now.categories.some(([k]) => k === c)).map((c) => [c, 0] as [string, number])]
   const max = now.categories[0]?.[1] ?? 0
   const diff = now.expense - prev.expense
+  const totalUsed = usedPercent(budgetedSpent, totalBudget)
+  const totalOver = budgetedSpent > totalBudget
+  const { start, end } = monthRange(month)
+  const elapsed = elapsedPercent(start, end, today())
   const budgetEditor = editingBudget && <BudgetEditor ledger={ledger} month={month} close={() => setEditingBudget(false)} />
 
   if (ledger.transactions.length === 0) {
@@ -51,11 +55,6 @@ export default function Dashboard({ ledger, month, setMonth, openCategory, goImp
               지난달보다 {formatWon(Math.abs(diff))} {diff > 0 ? '더 씀' : diff < 0 ? '덜 씀' : '(같음)'}
             </small>
           )}
-          {totalBudget > 0 && (
-            <small className={budgetedSpent > totalBudget ? 'over' : 'muted'}>
-              예산 {formatWon(totalBudget)} 중 {budgetedSpent > totalBudget ? `${formatWon(budgetedSpent - totalBudget)} 초과` : `${formatWon(totalBudget - budgetedSpent)} 남음`}
-            </small>
-          )}
         </div>
         <div className="tile">
           <span className="muted">수입</span>
@@ -66,6 +65,30 @@ export default function Dashboard({ ledger, month, setMonth, openCategory, goImp
           <small className="muted">남은 돈 {formatWon(now.income - now.expense, true)}</small>
         </div>
       </div>
+
+      {totalBudget > 0 && (
+        <div className={`budget-card${totalOver ? ' is-over' : ''}`}>
+          <div className="bar-label">
+            <span>전체 예산</span>
+            <strong className={totalOver ? 'over' : ''}>{totalUsed}% 사용</strong>
+          </div>
+          <span className="bar-track" title={`기간 ${elapsed}% 지남`}>
+            <span className={`bar-fill${totalOver ? ' over' : ''}`} style={{ width: `${Math.min(totalUsed, 100)}%` }} />
+            {elapsed > 0 && elapsed < 100 && <span className="pace" style={{ left: `${elapsed}%` }} aria-hidden="true" />}
+          </span>
+          <small className="muted">
+            {formatWon(totalBudget)} 중 {formatWon(budgetedSpent)} 사용 ·{' '}
+            <span className={totalOver ? 'over' : ''}>
+              {totalOver ? `${formatWon(budgetedSpent - totalBudget)} 초과` : `${formatWon(totalBudget - budgetedSpent)} 남음`}
+            </span>
+          </small>
+          {elapsed > 0 && elapsed < 100 && (
+            <small className="muted">
+              세로선은 오늘 (기간 {elapsed}% 지남){totalUsed > elapsed ? ' · 기간보다 빨리 쓰는 중' : ''}
+            </small>
+          )}
+        </div>
+      )}
 
       <div className="section-head">
         <h2>분류별 지출</h2>
@@ -98,7 +121,7 @@ export default function Dashboard({ ledger, month, setMonth, openCategory, goImp
                   </span>
                   {budget !== undefined && (
                     <small className={over ? 'over' : 'muted'}>
-                      {over ? `${formatWon(value - budget)} 초과` : `${formatWon(budget - value)} 남음`}
+                      {usedPercent(value, budget)}% 사용 · {over ? `${formatWon(value - budget)} 초과` : `${formatWon(budget - value)} 남음`}
                     </small>
                   )}
                 </button>
