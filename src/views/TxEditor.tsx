@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { ALL_CATEGORIES, categorize } from '../categories'
 import { today } from '../format'
 import type { Transaction } from '../types'
+import { useScrollLock } from '../useScrollLock'
 import { matchesKeyword, type Ledger } from '../useLedger'
 
 interface Props {
@@ -22,6 +23,7 @@ export default function TxEditor({ ledger, tx, close }: Props) {
   const [learn, setLearn] = useState(true)
   const [keyword, setKeyword] = useState(tx?.description || tx?.memo || '')
   const [busy, setBusy] = useState(false)
+  useScrollLock()
 
   const editable = isNew || tx.source === 'manual'
   const signed = (kind === 'out' ? -1 : 1) * Number(amount.replace(/[^\d]/g, ''))
