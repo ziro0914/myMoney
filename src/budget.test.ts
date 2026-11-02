@@ -44,3 +44,14 @@ describe('소진율', () => {
     expect(elapsedPercent('2026-09-21', '2026-10-20', '2026-09-01')).toBe(0)
   })
 })
+
+describe('없어진 분류의 예산', () => {
+  it('지금 분류 목록에 없는 예산은 빼고 계산한다', () => {
+    const bs = [
+      { month: '2026-10', category: '구독', amount: 50_000 },
+      { month: '2026-10', category: '식비', amount: 300_000 },
+    ]
+    expect([...budgetsFor(bs, '2026-11', ['식비', '동창회비'])]).toEqual([['식비', 300_000]])
+    expect(budgetsFor(bs, '2026-11').size).toBe(2)
+  })
+})

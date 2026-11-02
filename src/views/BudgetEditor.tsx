@@ -13,7 +13,7 @@ const withCommas = (v: string) => (toNumber(v) ? toNumber(v).toLocaleString('ko-
 
 /** 그 달의 분류별 예산을 정한다. 정한 금액은 다음 달에도 이어진다. */
 export default function BudgetEditor({ ledger, month, close }: { ledger: Ledger; month: string; close: () => void }) {
-  const current = budgetsFor(ledger.budgets, month)
+  const current = budgetsFor(ledger.budgets, month, CATEGORIES)
   const [values, setValues] = useState<Record<string, string>>(() =>
     Object.fromEntries(CATEGORIES.map((c) => [c, current.has(c) ? current.get(c)!.toLocaleString('ko-KR') : ''])),
   )

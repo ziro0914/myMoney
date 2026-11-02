@@ -1,5 +1,6 @@
 import { BOOK_TITLE } from '../book'
 import { useMemo, useState } from 'react'
+import { EXPENSE_CATEGORIES } from '../categories'
 import { budgetsFor, elapsedPercent, usedPercent } from '../budget'
 import { formatWon, monthRange, shiftMonth, today } from '../format'
 import { summarize } from '../summary'
@@ -18,7 +19,7 @@ interface Props {
 export default function Dashboard({ ledger, month, setMonth, openCategory, goImport }: Props) {
   const now = useMemo(() => summarize(ledger.transactions, month), [ledger.transactions, month])
   const prev = useMemo(() => summarize(ledger.transactions, shiftMonth(month, -1)), [ledger.transactions, month])
-  const budgets = useMemo(() => budgetsFor(ledger.budgets, month), [ledger.budgets, month])
+  const budgets = useMemo(() => budgetsFor(ledger.budgets, month, EXPENSE_CATEGORIES), [ledger.budgets, month])
   const [editingBudget, setEditingBudget] = useState(false)
   const totalBudget = [...budgets.values()].reduce((a, b) => a + b, 0)
   // 예산을 정한 분류의 지출만 예산과 비교한다.

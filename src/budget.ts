@@ -5,10 +5,12 @@ import type { Budget } from './types'
  * 분류마다 그 달이나 그 전 달 중 가장 최근에 정한 금액을 쓴다 (한 번 정하면 다음 달에도 이어짐).
  * 0으로 정한 달부터는 예산이 없다.
  */
-export function budgetsFor(budgets: Budget[], month: string): Map<string, number> {
+export function budgetsFor(budgets: Budget[], month: string, categories?: readonly string[]): Map<string, number> {
+  // 지금 가계부에 없는 분류(예: 이름을 바꾸기 전 '구독')에 남은 예산은 무시한다.
+  const allowed = categories && new Set(categories)
   const latest = new Map<string, Budget>()
   for (const b of budgets) {
-    if (b.month > month) continue
+    if (b.month > month || (allowed && !allowed.has(b.category))) continue
     const cur = latest.get(b.category)
     if (!cur || b.month > cur.month) latest.set(b.category, b)
   }
