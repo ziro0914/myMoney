@@ -1,6 +1,8 @@
 import { describe, expect, it } from 'vitest'
-import { cardSmsDedupeKey, parseCardSms, resolveSmsDate } from '../supabase/functions/_shared/cardSms.ts'
-import { categorizeFor, expenseCategories } from '../supabase/functions/_shared/categories.ts'
+import { cardSmsDedupeKey, parseCardSms, resolveSmsDate } from './cardSms'
+import { categorize } from './categories'
+import { planSmsInbox, SMS_INBOX_CATEGORY } from './smsInbox'
+import type { Transaction } from './types'
 
 const today = '2026-11-11'
 
@@ -47,14 +49,44 @@ describe('하나카드 승인 문자', () => {
     const a = parseCardSms('하나6*6*승인 강*호 4,500원 일시불 11/10 09:00 스타벅스 누적100,000원', today)!
     const b = parseCardSms('하나6*6*승인 강*호 4,500원 일시불 11/10 09:00 스타벅스 누적104,500원', today)!
     expect(cardSmsDedupeKey(a)).not.toBe(cardSmsDedupeKey(b))
-    expect(categorizeFor('family', `${a.merchant} ${a.memo}`, a.amount, [])).toBe('카페·간식')
+    expect(categorize(`${a.merchant} ${a.memo}`, a.amount, [])).toBe('카페·간식')
   })
 })
 
-describe('외식비 분류', () => {
-  it('우리집 가계부에만 있다', () => {
-    expect(expenseCategories('family')).toContain('외식비')
-    expect(expenseCategories('personal')).not.toContain('외식비')
-    expect(expenseCategories('saera')).not.toContain('외식비')
+const row = (id: string, patch: Partial<Transaction>): Transaction => ({
+  id,
+  date: '2000-01-01',
+  time: '',
+  amount: 0,
+  description: '',
+  category: SMS_INBOX_CATEGORY,
+  memo: '',
+  source: 'import',
+  dedupeKey: null,
+  balance: null,
+  ...patch,
+})
+
+describe('단축어로 들어온 카드 문자', () => {
+  const sms = '[Web발신]\n하나6*6*승인 강*호 84,000원\n일시불 11/08 13:34 뽀로로테마파크다누적2,653,580원'
+
+  it('지출로 바꾸고, 광고와 같은 문자 두 번째는 지운다', () => {
+    const plan = planSmsInbox(
+      [row('a', { description: sms }), row('b', { description: sms }), row('c', { description: '(광고)[하나카드] 커피 10잔' })],
+      [{ id: 'r', keyword: '뽀로로', category: '여가' }],
+      today,
+    )
+    expect(plan.updates).toEqual([
+      {
+        id: 'a',
+        patch: expect.objectContaining({ date: '2026-11-08', time: '13:34', amount: -84000, description: '뽀로로테마파크다', category: '여가' }),
+      },
+    ])
+    expect(plan.deletes).toEqual(['b', 'c'])
+  })
+
+  it('캡처로 이미 넣은 거래면 지운다', () => {
+    const saved = row('s', { date: '2026-11-08', time: '13:34', amount: -84000, description: '뽀로로테마파크', category: '여가' })
+    expect(planSmsInbox([saved, row('a', { description: sms })], [], today)).toEqual({ updates: [], deletes: ['a'] })
   })
 })

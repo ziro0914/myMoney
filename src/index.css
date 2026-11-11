@@ -194,3 +194,12 @@ label.check input { width: auto; margin-top: 0.15rem; }
 .budget-card .bar-track { position: relative; overflow: visible; }
 .budget-card .bar-fill { border-radius: 4px; }
 .pace { position: absolute; top: -3px; bottom: -3px; width: 2px; margin-left: -1px; background: var(--text); border-radius: 1px; }
+
+/* 설정: 카드 문자 단축어 안내 */
+.sms-guide summary { cursor: pointer; list-style: revert; }
+.sms-guide summary h2 { display: inline; }
+.sms-guide ol { padding-left: 1.2rem; line-height: 1.6; }
+.copy-list { list-style: none; padding: 0; margin: 0.5rem 0; display: grid; gap: 0.4rem; }
+.copy-row { display: grid; grid-template-columns: 1fr auto; gap: 0.1rem 0.5rem; align-items: center; }
+.copy-row .muted { grid-column: 1 / -1; }
+.copy-row code { overflow-wrap: anywhere; font-size: 0.8rem; }
