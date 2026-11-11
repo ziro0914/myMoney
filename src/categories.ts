@@ -4,11 +4,15 @@ import type { Rule } from './types'
 /** 가족 가계부에만 있는 지출 분류 */
 const FAMILY_ONLY_CATEGORIES = BOOK === 'family' ? ['용돈', '부모님'] : []
 
+/** 우리집 가계부는 밖에서 사 먹은 돈을 식비와 따로 본다 */
+const EATING_OUT = BOOK === 'family' ? ['외식비'] : []
+
 /** 내 가계부는 '구독' 대신 '동창회비'를 쓴다 */
 const SUBSCRIPTION_SLOT = BOOK === 'personal' ? '동창회비' : '구독'
 
 export const EXPENSE_CATEGORIES: readonly string[] = [
   '식비',
+  ...EATING_OUT,
   '카페·간식',
   '마트·생활',
   '쇼핑',

@@ -1,10 +1,16 @@
 import { useCallback, useEffect, useState } from 'react'
 import { categorize } from './categories'
+import { planSmsInbox, SMS_INBOX_CATEGORY } from './smsInbox'
 import type { Repo } from './store/repo'
 import type { Budget, NewTransaction, Rule, Transaction } from './types'
 
 export function matchesKeyword(t: Transaction, keyword: string): boolean {
   return `${t.description} ${t.memo}`.toUpperCase().includes(keyword.toUpperCase())
+}
+
+function localToday(): string {
+  const d = new Date()
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
 }
 
 export function useLedger(repo: Repo) {
@@ -16,7 +22,14 @@ export function useLedger(repo: Repo) {
 
   const reload = useCallback(async () => {
     try {
-      const [txs, rs, bs] = await Promise.all([repo.listTransactions(), repo.listRules(), repo.listBudgets()])
+      let [txs, rs, bs] = await Promise.all([repo.listTransactions(), repo.listRules(), repo.listBudgets()])
+      // 단축어로 들어온 카드 문자가 있으면 지출로 바꾸고 다시 읽는다.
+      if (txs.some((t) => t.category === SMS_INBOX_CATEGORY)) {
+        const plan = planSmsInbox(txs, rs, localToday())
+        for (const { id, patch } of plan.updates) await repo.updateTransactions([id], patch)
+        for (const id of plan.deletes) await repo.deleteTransaction(id)
+        txs = await repo.listTransactions()
+      }
       setTransactions(txs)
       setRules(rs)
       setBudgets(bs)

@@ -1,7 +1,77 @@
 import { useState } from 'react'
-import { BOOK, BOOK_TITLE } from '../book'
+import { BOOK, BOOK_TITLE, OWNER, TABLE_PREFIX } from '../book'
 import { ALL_CATEGORIES } from '../categories'
+import { SMS_INBOX_CATEGORY } from '../smsInbox'
+import { key as supabaseKey, url as supabaseUrl } from '../store/supabase'
 import type { Ledger } from '../useLedger'
+
+function Copy({ label, value }: { label: string; value: string }) {
+  const [copied, setCopied] = useState(false)
+  return (
+    <li className="copy-row">
+      <span className="muted small">{label}</span>
+      <code>{value}</code>
+      <button
+        type="button"
+        className="link"
+        onClick={async () => {
+          await navigator.clipboard.writeText(value)
+          setCopied(true)
+          setTimeout(() => setCopied(false), 1500)
+        }}
+      >
+        {copied ? '복사됨' : '복사'}
+      </button>
+    </li>
+  )
+}
+
+/** 아이폰 단축어로 카드 문자를 바로 넣는 법. 단축어에 그대로 붙여 넣을 값을 보여 준다. */
+function SmsShortcutGuide() {
+  if (!supabaseUrl || !supabaseKey) return null
+  return (
+    <details className="sms-guide">
+      <summary>
+        <h2>카드 문자 자동 입력 (아이폰 단축어)</h2>
+      </summary>
+      <p className="muted small">
+        하나카드 승인 문자가 오면 단축어가 이 가계부로 보내요. 앱을 열면 지출로 바뀌어 있어요. 광고 문자는 버리고, 취소 문자는 +로
+        넣어요.
+      </p>
+      <ol className="small">
+        <li>단축어 앱 → 아래 <b>자동화</b> → 오른쪽 위 <b>+</b> → <b>메시지</b></li>
+        <li>
+          <b>메시지에 포함</b>에 <code>누적</code> 입력 → <b>즉시 실행</b> 선택 → <b>다음</b>
+        </li>
+        <li>
+          <b>새로운 빈 단축어</b> → <b>URL 콘텐츠 가져오기</b> 추가 → 파란 <b>URL</b> 자리에 아래 주소 붙여 넣기
+        </li>
+        <li>
+          <b>방법</b>을 <b>POST</b>로. <b>헤더</b>에 아래 두 개 추가
+        </li>
+        <li>
+          <b>요청 본문</b>은 <b>JSON</b>. 아래 칸을 <b>텍스트</b>로 추가하고, <code>description</code> 값은 키보드 위의 <b>단축어 입력</b>을
+          누른 뒤 <b>메시지</b> → <b>내용</b>으로 바꾸기
+        </li>
+      </ol>
+      <ul className="copy-list">
+        <Copy label="URL" value={`${supabaseUrl}/rest/v1/${TABLE_PREFIX}transactions`} />
+        <Copy label="헤더 apikey" value={supabaseKey} />
+        <Copy label="헤더 Authorization" value={`Bearer ${supabaseKey}`} />
+        <Copy label="본문 date" value="2000-01-01" />
+        <Copy label="본문 amount (숫자)" value="0" />
+        <Copy label="본문 category" value={SMS_INBOX_CATEGORY} />
+        <Copy label="본문 source" value="import" />
+        {OWNER && OWNER !== 'me' && <Copy label="본문 owner" value={OWNER} />}
+        <li className="copy-row">
+          <span className="muted small">본문 description</span>
+          <code>단축어 입력 (메시지 내용)</code>
+        </li>
+      </ul>
+      <p className="muted small">date와 amount는 자리만 채우는 값이에요. 진짜 날짜와 금액은 앱이 문자에서 읽어요.</p>
+    </details>
+  )
+}
 
 function exportCsv(ledger: Ledger) {
   const esc = (v: string | number | null) => `"${String(v ?? '').replace(/"/g, '""')}"`
@@ -84,6 +154,8 @@ export default function SettingsView({
         미분류 내역에 규칙 다시 적용
       </button>
       {notice && <p className="muted small">{notice}</p>}
+
+      {mode === 'shared' && <SmsShortcutGuide />}
 
       <h2>데이터</h2>
       <div className="stack">
